@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 # --- CÓDIGO DE CHOQUE: FORÇA A ATUALIZAÇÃO DA BIBLIOTECA NO SERVIDOR ---
+# Este bloco garante que o Streamlit Cloud use a versão 0.8.3, ignorando o cache antigo.
 try:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "google-generativeai==0.8.3"])
 except Exception as e:
@@ -31,7 +32,7 @@ st.title("🚀 Portal Perito RS - Gerador de Planos")
 with st.expander("🔍 Rodar Diagnóstico de API"):
     if st.button("Verificar Conexão e Modelos"):
         try:
-            # O comando supported_methods agora funcionará com a biblioteca 0.8.3
+            # Com a versão 0.8.3 instalada pelo código de choque, este comando não falhará
             modelos = [m.name for m in genai.list_models() if 'generateContent' in m.supported_methods]
             st.success("Conexão estabelecida com sucesso!")
             st.write("Modelos disponíveis:", modelos)
@@ -58,9 +59,11 @@ if st.button("Gerar Planejamento"):
                 
                 # Gerador de Word (Arial 12)
                 doc = Document()
+                # Configurando a fonte padrão para Arial 12
                 style = doc.styles['Normal']
-                style.font.name = 'Arial'
-                style.font.size = 12
+                font = style.font
+                font.name = 'Arial'
+                font.size = 12
                 
                 doc.add_heading(f'Plano de Aula: {materia} - {ano}', 0)
                 doc.add_paragraph(texto_gerado)

@@ -1,67 +1,81 @@
+import subprocess
+import sys
+
+# --- CÓDIGO DE CHOQUE: FORÇA A ATUALIZAÇÃO DA BIBLIOTECA NO SERVIDOR ---
+try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "google-generativeai==0.8.3"])
+except Exception as e:
+    print(f"Erro na instalação forçada: {e}")
+# ----------------------------------------------------------------------
+
 import streamlit as st
-import pandas as pd
+import google.generativeai as genai
+import os
+from docx import Document
+from io import BytesIO
 
-# 1. Configuração de Identidade e SEO
-st.set_page_config(page_title="Diário Mil Graus Passo Fundo - Notícias Locais", page_icon="📰")
+# Configuração da Página
+st.set_page_config(page_title="Portal Perito RS", layout="wide")
 
-# Estilo Visual de Jornal Profissional
-st.markdown("""
-    <style>
-    .main { background-color: #f4f4f4; color: #333; }
-    .noticia-container { background-color: #ffffff; padding: 25px; border-radius: 5px; border-bottom: 3px solid #d32f2f; margin-bottom: 30px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); }
-    h1 { color: #d32f2f; font-family: 'Playfair Display', serif; text-align: center; border-bottom: 2px solid #333; }
-    h2 { color: #1a1a1a; }
-    .footer { text-align: center; font-size: 0.8em; color: #666; margin-top: 50px; }
-    </style>
-    """, unsafe_allow_html=True)
+# Recuperação da API Key das Secrets do Streamlit
+api_key = st.secrets.get("GOOGLE_API_KEY")
 
-# Link da sua planilha formatado para leitura direta de CSV
-URL_CSV = "https://docs.google.com/spreadsheets/d/1V2CGR5owvN_1LYkVrJjjxg71L1TeGzo3K8onaatZ0I8/export?format=csv"
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.error("Erro: GOOGLE_API_KEY não encontrada nas Secrets.")
 
-# 2. Menu de Navegação
-st.sidebar.title("📌 Editorias")
-menu = st.sidebar.radio("Navegar por:", ["Últimas Notícias", "Arquivo de Notícias", "Sobre o Diário", "Privacidade"])
+st.title("🚀 Portal Perito RS - Gerador de Planos")
 
-# --- PÁGINA PRINCIPAL: ÚLTIMAS NOTÍCIAS ---
-if menu == "Últimas Notícias":
-    st.title("📰 DIÁRIO MIL GRAUS PASSO FUNDO")
-    st.write(f"**Data:** {pd.Timestamp.now().strftime('%d/%m/%Y')} | Acompanhe os fatos da nossa região.")
-    
-    try:
-        df = pd.read_csv(URL_CSV)
-        # Mostra as notícias da mais nova para a mais antiga
-        for index, row in df.iloc[::-1].iterrows():
-            with st.container():
-                st.markdown("<div class='noticia-container'>", unsafe_allow_html=True)
-                st.caption(f"📅 {row['Data']} | 📂 {row['Categoria']}")
-                st.header(row['Titulo'])
-                if pd.notna(row['Imagem_URL']):
-                    st.image(row['Imagem_URL'], use_container_width=True)
-                # O Google exige textos longos (mínimo 30 linhas) para aprovar
-                st.write(row['Conteudo'])
-                st.markdown("</div>", unsafe_allow_html=True)
-    except Exception as e:
-        st.info("O Diário está sendo atualizado. Em breve, as notícias de Passo Fundo estarão aqui!")
+# Bloco de Diagnóstico
+with st.expander("🔍 Rodar Diagnóstico de API"):
+    if st.button("Verificar Conexão e Modelos"):
+        try:
+            # O comando supported_methods agora funcionará com a biblioteca 0.8.3
+            modelos = [m.name for m in genai.list_models() if 'generateContent' in m.supported_methods]
+            st.success("Conexão estabelecida com sucesso!")
+            st.write("Modelos disponíveis:", modelos)
+        except Exception as e:
+            st.error(f"Erro no Diagnóstico: {e}")
 
-# --- PÁGINA DE ARQUIVO (NOTÍCIAS ANTIGAS) ---
-elif menu == "Arquivo de Notícias":
-    st.title("📂 Arquivo Histórico")
-    st.write("Pesquise por fatos que marcaram Passo Fundo anteriormente.")
-    try:
-        df = pd.read_csv(URL_CSV)
-        for index, row in df.iterrows():
-            st.markdown(f"**[{row['Data']}]** - {row['Titulo']} (*{row['Categoria']}*)")
-    except:
-        st.write("Arquivo em fase de digitalização.")
+st.divider()
 
-# --- SOBRE E PRIVACIDADE ---
-elif menu == "Sobre o Diário":
-    st.title("👨‍💻 Nossa Missão")
-    st.write("O Diário Mil Graus Passo Fundo é um portal independente liderado por Juarez Bruschi Junior, focado em jornalismo local sério e utilidade pública.")
+# Interface de Entrada
+materia = st.text_input("Qual a matéria do planejamento?")
+ano = st.selectbox("Para qual ano?", ["1º Ano", "2º Ano", "3º Ano", "4º Ano", "5º Ano"])
 
-elif menu == "Privacidade":
-    st.title("🔒 Privacidade")
-    st.write("Seguimos todas as normas do Google AdSense para proteção de dados.")
-
-# Rodapé de Autoridade
-st.markdown("<div class='footer'>Diário Mil Graus Passo Fundo © 2026<br>Passo Fundo - Rio Grande do Sul</div>", unsafe_allow_html=True)
+if st.button("Gerar Planejamento"):
+    if materia:
+        with st.spinner("A IA está redigindo seu plano em Arial 12..."):
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                prompt = f"Crie um plano de aula completo para a matéria de {materia} voltado para o {ano}, seguindo a BNCC."
+                response = model.generate_content(prompt)
+                
+                texto_gerado = response.text
+                st.subheader("Resultado Visual:")
+                st.write(texto_gerado)
+                
+                # Gerador de Word (Arial 12)
+                doc = Document()
+                style = doc.styles['Normal']
+                style.font.name = 'Arial'
+                style.font.size = 12
+                
+                doc.add_heading(f'Plano de Aula: {materia} - {ano}', 0)
+                doc.add_paragraph(texto_gerado)
+                
+                buffer = BytesIO()
+                doc.save(buffer)
+                buffer.seek(0)
+                
+                st.download_button(
+                    label="📥 Baixar Plano em Word (Arial 12)",
+                    data=buffer,
+                    file_name=f"Plano_{materia}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+            except Exception as e:
+                st.error(f"Erro ao gerar: {e}")
+    else:
+        st.warning("Por favor, digite a matéria.")

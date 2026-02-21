@@ -21,7 +21,7 @@ if st.button("🔍 Rodar Diagnóstico"):
     try:
         # Apenas lista os nomes dos modelos, comando universal
         modelos = [m.name for m in genai.list_models()]
-        st.success("Conectado com sucesso ao Google AI!")
+        st.success("Conectado com sucesso ao Google AI Studio!")
         st.write("Modelos disponíveis:", modelos)
     except Exception as e:
         st.error(f"Erro na conexão: {e}")

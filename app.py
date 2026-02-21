@@ -19,7 +19,7 @@ st.title("🚀 Portal Perito RS")
 # Diagnóstico Corrigido (Sem o comando que causa erro)
 if st.button("🔍 Rodar Diagnóstico"):
     try:
-        # Apenas lista os nomes dos modelos, comando que funciona em todas as versões
+        # Apenas lista os nomes dos modelos, comando universal
         modelos = [m.name for m in genai.list_models()]
         st.success("Conectado com sucesso ao Google AI!")
         st.write("Modelos disponíveis:", modelos)

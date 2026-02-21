@@ -6,7 +6,7 @@ from io import BytesIO
 # Configuração da Página
 st.set_page_config(page_title="Portal Perito RS", layout="wide")
 
-# Recuperação das chaves (Secrets)
+# Recuperação das Chaves das Secrets
 api_key = st.secrets.get("GOOGLE_API_KEY")
 
 if api_key:
@@ -16,13 +16,13 @@ else:
 
 st.title("🚀 Portal Perito RS")
 
-# Diagnóstico Corrigido (Sem 'supported_methods')
+# Diagnóstico Corrigido (Sem o comando 'supported_methods')
 if st.button("🔍 Rodar Diagnóstico"):
     try:
-        # Apenas lista os modelos disponíveis do Google Gemini
+        # Apenas lista os nomes dos modelos, o que funciona em qualquer versão
         modelos = [m.name for m in genai.list_models()]
         st.success("Conectado com sucesso ao Google AI!")
-        st.write("Modelos disponíveis para uso:", modelos)
+        st.write("Modelos disponíveis:", modelos)
     except Exception as e:
         st.error(f"Erro na conexão: {e}")
 
@@ -35,7 +35,6 @@ if st.button("Gerar Planejamento"):
     if materia:
         with st.spinner("Gerando plano em Arial 12..."):
             try:
-                # Chamada direta ao modelo 1.5 Flash
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(f"Crie um plano de aula completo para {materia}, {ano}, seguindo a BNCC.")
                 
@@ -43,7 +42,7 @@ if st.button("Gerar Planejamento"):
                 st.subheader("Resultado:")
                 st.write(texto_gerado)
                 
-                # Criando o arquivo Word (Arial 12)
+                # Gerador de Word (Arial 12)
                 doc = Document()
                 style = doc.styles['Normal']
                 style.font.name = 'Arial'

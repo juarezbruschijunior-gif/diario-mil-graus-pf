@@ -6,25 +6,25 @@ from io import BytesIO
 # Configuração da Página
 st.set_page_config(page_title="Portal Perito RS", layout="wide")
 
-# Recuperação da API Key
+# Recuperação das chaves (Secrets)
 api_key = st.secrets.get("GOOGLE_API_KEY")
 
 if api_key:
     genai.configure(api_key=api_key)
 else:
-    st.error("Erro: GOOGLE_API_KEY não encontrada nas Secrets.")
+    st.error("Erro: GOOGLE_API_KEY não encontrada.")
 
 st.title("🚀 Portal Perito RS")
 
-# Diagnóstico Simplificado (Removido o comando que dá erro)
-if st.button("Rodar Diagnóstico"):
+# Diagnóstico Corrigido (Sem 'supported_methods')
+if st.button("🔍 Rodar Diagnóstico"):
     try:
-        # Apenas lista os nomes dos modelos disponíveis
+        # Apenas lista os modelos disponíveis do Google Gemini
         modelos = [m.name for m in genai.list_models()]
-        st.success("Conectado com sucesso!")
-        st.write("Modelos encontrados:", modelos)
+        st.success("Conectado com sucesso ao Google AI!")
+        st.write("Modelos disponíveis para uso:", modelos)
     except Exception as e:
-        st.error(f"Erro ao conectar: {e}")
+        st.error(f"Erro na conexão: {e}")
 
 st.divider()
 
@@ -35,7 +35,7 @@ if st.button("Gerar Planejamento"):
     if materia:
         with st.spinner("Gerando plano em Arial 12..."):
             try:
-                # Chamada direta ao modelo padrão
+                # Chamada direta ao modelo 1.5 Flash
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(f"Crie um plano de aula completo para {materia}, {ano}, seguindo a BNCC.")
                 
